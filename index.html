@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BNCT_1360 Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a0c0f;
+  --panel:     #0f1318;
+  --border:    #1a2030;
+  --accent:    #00d4ff;
+  --accent2:   #ff3860;
+  --accent3:   #00ff88;
+  --warn:      #ffb300;
+  --text:      #c8d6e5;
+  --text-dim:  #4a5568;
+  --glow:      0 0 20px rgba(0,212,255,0.3);
+  --glow2:     0 0 20px rgba(255,56,96,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* Grid background */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;
+}
+
+/* ── LOGIN ── */
+#login-screen{
+  position:fixed;inset:0;background:var(--bg);display:flex;
+  align-items:center;justify-content:center;z-index:100;
+}
+.login-box{
+  background:var(--panel);border:1px solid var(--accent);
+  padding:48px 40px;width:380px;position:relative;
+  box-shadow:var(--glow);
+}
+.login-box::before{content:'';position:absolute;top:-1px;left:20px;right:20px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+.login-logo{text-align:center;margin-bottom:32px;}
+.login-logo span{font-family:'Share Tech Mono';font-size:28px;color:var(--accent);letter-spacing:4px;}
+.login-logo p{color:var(--text-dim);font-size:13px;margin-top:6px;letter-spacing:2px;}
+.login-input{
+  width:100%;background:rgba(0,212,255,0.05);border:1px solid var(--border);
+  color:var(--text);padding:14px 16px;font-family:'Rajdhani';font-size:16px;
+  letter-spacing:2px;margin-bottom:16px;outline:none;transition:.2s;
+}
+.login-input:focus{border-color:var(--accent);box-shadow:0 0 10px rgba(0,212,255,0.2);}
+.login-btn{
+  width:100%;background:transparent;border:1px solid var(--accent);color:var(--accent);
+  padding:14px;font-family:'Rajdhani';font-size:18px;font-weight:700;letter-spacing:4px;
+  cursor:pointer;transition:.3s;text-transform:uppercase;
+}
+.login-btn:hover{background:var(--accent);color:var(--bg);box-shadow:var(--glow);}
+.login-error{color:var(--accent2);text-align:center;font-size:14px;margin-top:12px;display:none;}
+.lock-icon{text-align:center;font-size:48px;margin-bottom:16px;}
+.attempts-bar{margin-top:12px;text-align:center;font-size:12px;color:var(--text-dim);font-family:'Share Tech Mono';}
+
+/* ── DASHBOARD ── */
+#dashboard{display:none;position:relative;z-index:1;}
+.topbar{
+  background:var(--panel);border-bottom:1px solid var(--border);
+  padding:0 24px;display:flex;align-items:center;justify-content:space-between;
+  height:60px;position:sticky;top:0;z-index:50;
+}
+.topbar-logo{font-family:'Share Tech Mono';color:var(--accent);font-size:20px;letter-spacing:3px;}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--accent3);box-shadow:0 0 8px var(--accent3);animation:pulse 2s infinite;}
+.logout-btn{background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:6px 16px;font-family:'Rajdhani';font-size:14px;cursor:pointer;letter-spacing:2px;transition:.2s;}
+.logout-btn:hover{background:var(--accent2);color:var(--bg);}
+
+.main{padding:24px;max-width:1400px;margin:0 auto;}
+
+/* ── CONFIG ── */
+.config-bar{
+  background:var(--panel);border:1px solid var(--border);padding:16px 20px;
+  margin-bottom:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+}
+.config-bar label{color:var(--text-dim);font-size:13px;letter-spacing:1px;}
+.config-input{
+  background:rgba(0,212,255,0.05);border:1px solid var(--border);color:var(--text);
+  padding:8px 12px;font-family:'Share Tech Mono';font-size:13px;flex:1;min-width:200px;
+  outline:none;
+}
+.config-input:focus{border-color:var(--accent);}
+.btn{
+  padding:8px 20px;font-family:'Rajdhani';font-size:15px;font-weight:600;
+  letter-spacing:2px;cursor:pointer;transition:.2s;border:none;
+}
+.btn-primary{background:var(--accent);color:var(--bg);}
+.btn-primary:hover{box-shadow:var(--glow);transform:translateY(-1px);}
+.btn-danger{background:transparent;border:1px solid var(--accent2);color:var(--accent2);}
+.btn-danger:hover{background:var(--accent2);color:var(--bg);}
+.btn-success{background:transparent;border:1px solid var(--accent3);color:var(--accent3);}
+.btn-success:hover{background:var(--accent3);color:var(--bg);}
+.btn-warn{background:transparent;border:1px solid var(--warn);color:var(--warn);}
+.btn-warn:hover{background:var(--warn);color:var(--bg);}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{
+  background:var(--panel);border:1px solid var(--border);padding:20px;
+  position:relative;overflow:hidden;transition:.2s;
+}
+.stat-card:hover{border-color:var(--accent);box-shadow:var(--glow);}
+.stat-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),transparent);
+}
+.stat-label{font-size:12px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+.stat-value{font-family:'Share Tech Mono';font-size:36px;color:var(--accent);margin:8px 0 4px;}
+.stat-sub{font-size:12px;color:var(--text-dim);}
+.stat-card.red .stat-value{color:var(--accent2);}
+.stat-card.red::after{background:linear-gradient(90deg,var(--accent2),transparent);}
+.stat-card.green .stat-value{color:var(--accent3);}
+.stat-card.green::after{background:linear-gradient(90deg,var(--accent3),transparent);}
+.stat-card.warn .stat-value{color:var(--warn);}
+.stat-card.warn::after{background:linear-gradient(90deg,var(--warn),transparent);}
+
+/* ── PANELS ── */
+.panels-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+@media(max-width:900px){.panels-grid{grid-template-columns:1fr;}}
+
+.panel{background:var(--panel);border:1px solid var(--border);overflow:hidden;}
+.panel-header{
+  padding:12px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.panel-title{font-size:13px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;font-family:'Share Tech Mono';}
+.panel-body{padding:20px;}
+
+/* ── TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:14px;}
+.data-table th{
+  text-align:left;padding:8px 12px;font-size:11px;letter-spacing:2px;
+  color:var(--text-dim);border-bottom:1px solid var(--border);
+}
+.data-table td{padding:10px 12px;border-bottom:1px solid rgba(26,32,48,0.5);}
+.data-table tr:hover td{background:rgba(0,212,255,0.03);}
+.badge{
+  display:inline-block;padding:2px 10px;font-size:11px;letter-spacing:1px;
+  font-family:'Share Tech Mono';
+}
+.badge-active{background:rgba(0,255,136,0.1);color:var(--accent3);border:1px solid var(--accent3);}
+.badge-inactive{background:rgba(255,56,96,0.1);color:var(--accent2);border:1px solid var(--accent2);}
+.badge-vip{background:rgba(255,179,0,0.1);color:var(--warn);border:1px solid var(--warn);}
+.badge-blocked{background:rgba(255,56,96,0.1);color:var(--accent2);border:1px solid var(--accent2);}
+
+/* ── USER SEARCH ── */
+.search-box{display:flex;gap:8px;margin-bottom:16px;}
+.search-input{
+  flex:1;background:rgba(0,212,255,0.05);border:1px solid var(--border);
+  color:var(--text);padding:10px 14px;font-family:'Rajdhani';font-size:16px;outline:none;
+}
+.search-input:focus{border-color:var(--accent);}
+
+/* ── BOT CONTROL ── */
+.control-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.control-btn{
+  padding:14px;font-family:'Rajdhani';font-size:16px;font-weight:700;
+  letter-spacing:2px;cursor:pointer;transition:.3s;border:1px solid;text-transform:uppercase;
+  background:transparent;
+}
+.control-btn.bot-on{border-color:var(--accent3);color:var(--accent3);}
+.control-btn.bot-on:hover{background:var(--accent3);color:var(--bg);}
+.control-btn.bot-off{border-color:var(--accent2);color:var(--accent2);}
+.control-btn.bot-off:hover{background:var(--accent2);color:var(--bg);}
+.control-btn.broadcast{border-color:var(--accent);color:var(--accent);grid-column:1/-1;}
+.control-btn.broadcast:hover{background:var(--accent);color:var(--bg);}
+
+/* ── LOG ── */
+.log-entry{
+  padding:10px 14px;margin-bottom:4px;border-left:3px solid;
+  font-family:'Share Tech Mono';font-size:12px;background:rgba(255,255,255,0.02);
+}
+.log-entry.ok{border-color:var(--accent3);}
+.log-entry.warn{border-color:var(--warn);}
+.log-entry.danger{border-color:var(--accent2);}
+.log-entry.critical{border-color:#ff0040;background:rgba(255,0,64,0.05);}
+.log-time{color:var(--text-dim);margin-right:12px;}
+.log-scroll{max-height:300px;overflow-y:auto;}
+.log-scroll::-webkit-scrollbar{width:4px;}
+.log-scroll::-webkit-scrollbar-track{background:var(--bg);}
+.log-scroll::-webkit-scrollbar-thumb{background:var(--accent);}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;right:24px;padding:14px 24px;
+  font-family:'Share Tech Mono';font-size:14px;z-index:999;
+  transform:translateY(100px);transition:.3s;opacity:0;
+}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.success{background:var(--accent3);color:var(--bg);}
+#toast.error{background:var(--accent2);color:#fff;}
+#toast.info{background:var(--accent);color:var(--bg);}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;
+  display:none;align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--panel);border:1px solid var(--accent);padding:32px;
+  width:480px;max-width:90vw;box-shadow:var(--glow);
+}
+.modal h3{color:var(--accent);font-family:'Share Tech Mono';letter-spacing:2px;margin-bottom:20px;}
+.modal textarea,.modal input[type=text]{
+  width:100%;background:rgba(0,212,255,0.05);border:1px solid var(--border);
+  color:var(--text);padding:12px;font-family:'Rajdhani';font-size:16px;
+  outline:none;margin-bottom:12px;resize:vertical;
+}
+.modal textarea:focus,.modal input[type=text]:focus{border-color:var(--accent);}
+.modal-btns{display:flex;gap:12px;justify-content:flex-end;}
+
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn .4s ease forwards;}
+
+.section-title{
+  font-family:'Share Tech Mono';color:var(--text-dim);font-size:11px;
+  letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.full-panel{margin-bottom:24px;}
+.refresh-btn{
+  background:transparent;border:1px solid var(--border);color:var(--text-dim);
+  padding:4px 12px;font-size:12px;cursor:pointer;font-family:'Share Tech Mono';
+  transition:.2s;
+}
+.refresh-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.threat-0{color:var(--accent3);}
+.threat-1{color:var(--warn);}
+.threat-2{color:var(--accent2);}
+.threat-3{color:#ff0040;font-weight:bold;}
+
+.empty-state{text-align:center;padding:40px;color:var(--text-dim);font-family:'Share Tech Mono';font-size:13px;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-box fade-in">
+    <div class="lock-icon">🔐</div>
+    <div class="login-logo">
+      <span>BNCT_1360</span>
+      <p>ADMIN CONTROL PANEL</p>
+    </div>
+    <input class="login-input" type="password" id="pwd-input" placeholder="ENTER PASSWORD" autocomplete="off">
+    <input class="login-input" type="text" id="api-input" placeholder="API KEY (BNCT-XXXX-...)" autocomplete="off">
+    <input class="login-input" type="text" id="bot-api" placeholder="BOT API BASE URL (https://...)" autocomplete="off">
+    <button class="login-btn" onclick="doLogin()">⚡ ACCESS</button>
+    <div class="login-error" id="login-err">❌ ACCESS DENIED</div>
+    <div class="attempts-bar" id="attempts-bar"></div>
+  </div>
+</div>
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div id="dashboard">
+  <div class="topbar">
+    <div class="topbar-logo">⚡ BNCT_1360 ADMIN</div>
+    <div class="topbar-right">
+      <span style="font-family:'Share Tech Mono';font-size:12px;color:var(--text-dim);" id="last-refresh"></span>
+      <span class="status-dot"></span>
+      <span style="font-size:13px;color:var(--accent3);">LIVE</span>
+      <button class="logout-btn" onclick="doLogout()">LOGOUT</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- STATS -->
+    <div class="section-title">📊 LIVE STATISTICS</div>
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="s-total">--</div><div class="stat-sub">Registered</div></div>
+      <div class="stat-card green"><div class="stat-label">VIP Users</div><div class="stat-value" id="s-vip">--</div><div class="stat-sub">Premium</div></div>
+      <div class="stat-card red"><div class="stat-label">Blocked</div><div class="stat-value" id="s-blocked">--</div><div class="stat-sub">Restricted</div></div>
+      <div class="stat-card warn"><div class="stat-label">API Requests</div><div class="stat-value" id="s-api">--</div><div class="stat-sub">Total calls</div></div>
+      <div class="stat-card"><div class="stat-label">Bot Status</div><div class="stat-value" id="s-status" style="font-size:24px;">--</div><div class="stat-sub">Current state</div></div>
+      <div class="stat-card green"><div class="stat-label">API Status</div><div class="stat-value" id="s-api-status" style="font-size:24px;">--</div><div class="stat-sub">Connection</div></div>
+    </div>
+
+    <div class="panels-grid">
+      <!-- BOT CONTROL -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">🎮 BOT CONTROL</span>
+          <button class="refresh-btn" onclick="loadStats()">↻ REFRESH</button>
+        </div>
+        <div class="panel-body">
+          <div class="control-grid">
+            <button class="control-btn bot-on" onclick="botControl('on')">🟢 BOT ON</button>
+            <button class="control-btn bot-off" onclick="botControl('off')">🔴 BOT OFF</button>
+            <button class="control-btn broadcast" onclick="openBroadcast()">📢 BROADCAST MESSAGE</button>
+          </div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button class="btn btn-warn" onclick="openAddVIP()" style="width:100%;padding:10px;">👑 ADD VIP</button>
+            <button class="btn btn-danger" onclick="openRemoveVIP()" style="width:100%;padding:10px;">❌ REMOVE VIP</button>
+            <button class="btn btn-danger" onclick="openBlockUser()" style="width:100%;padding:10px;">🚫 BLOCK USER</button>
+            <button class="btn btn-success" onclick="openUnblockUser()" style="width:100%;padding:10px;">✅ UNBLOCK</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- USER LOOKUP -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">🔍 USER LOOKUP</span>
+        </div>
+        <div class="panel-body">
+          <div class="search-box">
+            <input class="search-input" id="uid-input" type="text" placeholder="Enter Telegram User ID...">
+            <button class="btn btn-primary" onclick="lookupUser()">SEARCH</button>
+          </div>
+          <div id="user-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- API SECURITY LOG -->
+    <div class="full-panel panel">
+      <div class="panel-header">
+        <span class="panel-title">🔒 API SECURITY LOG</span>
+        <button class="refresh-btn" onclick="loadSecurityLog()">↻ REFRESH</button>
+      </div>
+      <div class="panel-body">
+        <div class="log-scroll" id="security-log">
+          <div class="empty-state">Loading security logs...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- API KEYS -->
+    <div class="full-panel panel">
+      <div class="panel-header">
+        <span class="panel-title">🔑 API KEY MANAGEMENT</span>
+        <button class="btn btn-success" onclick="generateKey()" style="padding:6px 16px;font-size:13px;">+ GENERATE</button>
+      </div>
+      <div class="panel-body">
+        <div id="api-keys-list">
+          <div class="empty-state">Loading API keys...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ MODALS ══════════════ -->
+<div class="modal-overlay" id="modal-broadcast">
+  <div class="modal">
+    <h3>📢 BROADCAST MESSAGE</h3>
+    <textarea id="broadcast-text" rows="4" placeholder="Enter message to send to all users..."></textarea>
+    <div class="modal-btns">
+      <button class="btn btn-danger" onclick="closeModal('modal-broadcast')">CANCEL</button>
+      <button class="btn btn-primary" onclick="sendBroadcast()">SEND TO ALL</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-vip">
+  <div class="modal">
+    <h3 id="vip-modal-title">👑 ADD VIP</h3>
+    <input type="text" id="vip-uid" placeholder="Enter User ID...">
+    <div class="modal-btns">
+      <button class="btn btn-danger" onclick="closeModal('modal-vip')">CANCEL</button>
+      <button class="btn btn-warn" id="vip-confirm-btn" onclick="confirmVIP()">CONFIRM</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-block">
+  <div class="modal">
+    <h3 id="block-modal-title">🚫 BLOCK USER</h3>
+    <input type="text" id="block-uid" placeholder="Enter User ID...">
+    <div class="modal-btns">
+      <button class="btn btn-danger" onclick="closeModal('modal-block')">CANCEL</button>
+      <button class="btn btn-primary" id="block-confirm-btn" onclick="confirmBlock()">CONFIRM</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ TOAST ══════════════ -->
+<div id="toast"></div>
+
+<script>
+// ══════════════ CONFIG ══════════════
+const CORRECT_HASH = "e91a7c03d4a4b8f6d9b3e5c8a2f7d1b4e6c9a0d3f5b7e2c4a8d6b0e3f1a9c5"; // SHA256 of password
+let API_KEY  = '';
+let BASE_URL = '';
+let loginAttempts = 0;
+let lockUntil    = 0;
+
+// ══════════════ SECURITY ══════════════
+async function sha256(msg) {
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function sanitize(str) {
+  return String(str).replace(/[<>&"']/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#x27;'}[c]));
+}
+
+function validateUID(uid) {
+  return /^\d{5,15}$/.test(uid.trim());
+}
+
+// ══════════════ LOGIN ══════════════
+async function doLogin() {
+  const now = Date.now();
+  if (lockUntil > now) {
+    showToast(`Locked for ${Math.ceil((lockUntil-now)/1000)}s`, 'error');
+    return;
+  }
+  const pwd    = document.getElementById('pwd-input').value;
+  const apiKey = document.getElementById('api-input').value.trim();
+  const base   = document.getElementById('bot-api').value.trim();
+
+  if (!pwd || !apiKey || !base) {
+    showErr('All fields required');
+    return;
+  }
+  if (!apiKey.startsWith('BNCT-')) {
+    showErr('Invalid API key format');
+    return;
+  }
+
+  const hash = await sha256(pwd);
+
+  // Check password hash
+  // NOTE: Change this hash to sha256 of your new password
+  const knownHash = await sha256('19597722591951842878BNCT_100030060');
+  if (hash !== knownHash) {
+    loginAttempts++;
+    if (loginAttempts >= 3) {
+      lockUntil = Date.now() + 30000;
+      showErr('Too many attempts. Locked 30s');
+      updateAttemptsBar();
+      return;
+    }
+    showErr(`Wrong password (${3-loginAttempts} attempts left)`);
+    updateAttemptsBar();
+    return;
+  }
+
+  API_KEY  = apiKey;
+  BASE_URL = base.replace(/\/$/, '');
+
+  // Verify API key with server
+  try {
+    const r = await apiFetch('/api/v1/check');
+    if (!r || r.status !== 'ok') throw new Error('API check failed');
+  } catch(e) {
+    showErr('API connection failed: ' + e.message);
+    return;
+  }
+
+  // Success
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('pwd-input').value = '';
+  loadAll();
+  setInterval(loadStats, 30000);
+}
+
+function showErr(msg) {
+  const el = document.getElementById('login-err');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+}
+
+function updateAttemptsBar() {
+  document.getElementById('attempts-bar').textContent =
+    `Failed attempts: ${loginAttempts}/3`;
+}
+
+function doLogout() {
+  API_KEY = '';
+  BASE_URL = '';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('api-input').value = '';
+  document.getElementById('bot-api').value = '';
+}
+
+// ══════════════ API HELPER ══════════════
+async function apiFetch(path, opts = {}) {
+  const url = BASE_URL + path;
+  const headers = {
+    'X-API-Key': API_KEY,
+    'Content-Type': 'application/json',
+    ...( opts.headers || {} )
+  };
+  const res = await fetch(url, { ...opts, headers });
+  return res.json();
+}
+
+// ══════════════ LOAD ALL ══════════════
+function loadAll() {
+  loadStats();
+  loadSecurityLog();
+  loadAPIKeys();
+}
+
+async function loadStats() {
+  document.getElementById('last-refresh').textContent =
+    'Updated: ' + new Date().toLocaleTimeString();
+  try {
+    const r = await apiFetch('/api/v1/stats');
+    if (r.status === 'ok') {
+      document.getElementById('s-total').textContent   = r.stats.total_users;
+      document.getElementById('s-vip').textContent     = r.stats.vip_users;
+      document.getElementById('s-blocked').textContent = r.stats.blocked_users;
+      document.getElementById('s-api-status').textContent = '✅ ON';
+    }
+  } catch(e) {
+    document.getElementById('s-api-status').textContent = '❌ OFF';
+  }
+  try {
+    const rc = await apiFetch('/api/v1/check');
+    document.getElementById('s-status').textContent = rc.status === 'ok' ? '🟢 ON' : '🔴 OFF';
+  } catch(e) {
+    document.getElementById('s-status').textContent = '❌ ERR';
+  }
+}
+
+async function loadSecurityLog() {
+  const el = document.getElementById('security-log');
+  try {
+    const r = await apiFetch('/api/v1/security/log');
+    if (!r || !r.logs || !r.logs.length) {
+      el.innerHTML = '<div class="empty-state">No security events found</div>';
+      return;
+    }
+    document.getElementById('s-api').textContent = r.total || '--';
+    el.innerHTML = r.logs.map(log => {
+      const lvl  = log.threat_level || 0;
+      const cls  = lvl===3?'critical':lvl===2?'danger':lvl===1?'warn':'ok';
+      const icon = lvl===3?'🚨':lvl===2?'🔴':lvl===1?'⚠️':'✅';
+      const dt   = new Date(log.timestamp * 1000).toLocaleString();
+      return `<div class="log-entry ${cls}">
+        <span class="log-time">${sanitize(dt)}</span>
+        ${icon} <strong>${sanitize(log.status)}</strong>
+        | 🔑 <code>${sanitize((log.api_key||'').slice(0,20))}...</code>
+        | 🌐 <code>${sanitize(log.ip||'')}</code>
+        | 📍 <code>${sanitize(log.endpoint||'')}</code>
+        ${lvl>0?`<div style="margin-top:4px;color:var(--text-dim)">Payload: ${sanitize((log.payload||'').slice(0,100))}</div>`:''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state">⚠️ Could not load logs (${sanitize(e.message)})</div>`;
+  }
+}
+
+async function loadAPIKeys() {
+  const el = document.getElementById('api-keys-list');
+  try {
+    const r = await apiFetch('/api/v1/api-keys');
+    if (!r || !r.keys || !r.keys.length) {
+      el.innerHTML = '<div class="empty-state">No API keys found</div>';
+      return;
+    }
+    el.innerHTML = `<table class="data-table">
+      <tr><th>KEY</th><th>LABEL</th><th>STATUS</th><th>USES</th><th>LAST USED</th><th>ACTION</th></tr>
+      ${r.keys.map(k=>`<tr>
+        <td><code style="font-size:12px">${sanitize(k.key.slice(0,24))}...</code></td>
+        <td>${sanitize(k.label||'—')}</td>
+        <td><span class="badge ${k.active?'badge-active':'badge-inactive'}">${k.active?'ACTIVE':'INACTIVE'}</span></td>
+        <td>${k.use_count||0}</td>
+        <td style="font-size:12px">${k.last_used?new Date(k.last_used*1000).toLocaleDateString():'Never'}</td>
+        <td><button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="deleteKey('${sanitize(k.key)}')">DELETE</button></td>
+      </tr>`).join('')}
+    </table>`;
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state">⚠️ Could not load keys</div>`;
+  }
+}
+
+// ══════════════ USER LOOKUP ══════════════
+async function lookupUser() {
+  const uid = document.getElementById('uid-input').value.trim();
+  if (!validateUID(uid)) {
+    showToast('Invalid User ID format', 'error');
+    return;
+  }
+  const el = document.getElementById('user-result');
+  el.innerHTML = '<div style="color:var(--text-dim);font-family:\'Share Tech Mono\';font-size:13px">Searching...</div>';
+  try {
+    const r = await apiFetch(`/api/v1/user/${uid}`);
+    if (r.status !== 'ok') {
+      el.innerHTML = `<div style="color:var(--accent2);font-family:'Share Tech Mono';font-size:13px">❌ User not found</div>`;
+      return;
+    }
+    const u = r.user;
+    el.innerHTML = `
+      <div style="background:rgba(0,212,255,0.05);border:1px solid var(--border);padding:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px;">
+          <div><span style="color:var(--text-dim)">ID</span><br><code>${sanitize(u.user_id)}</code></div>
+          <div><span style="color:var(--text-dim)">Name</span><br>${sanitize(u.name||'—')}</div>
+          <div><span style="color:var(--text-dim)">Username</span><br>@${sanitize(u.username||'—')}</div>
+          <div><span style="color:var(--text-dim)">Credits</span><br><code style="color:var(--accent3)">${u.ref_credits||0}</code></div>
+          <div><span style="color:var(--text-dim)">VIP</span><br>
+            <span class="badge ${u.is_vip?'badge-vip':'badge-inactive'}">${u.is_vip?'VIP':'Normal'}</span>
+          </div>
+          <div><span style="color:var(--text-dim)">Status</span><br>
+            <span class="badge ${u.is_blocked?'badge-blocked':'badge-active'}">${u.is_blocked?'BLOCKED':'ACTIVE'}</span>
+          </div>
+        </div>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--accent2)">❌ ${sanitize(e.message)}</div>`;
+  }
+}
+
+// ══════════════ BOT CONTROL ══════════════
+async function botControl(action) {
+  try {
+    const r = await apiFetch(`/api/v1/bot/${action}`, {method:'POST'});
+    if (r.status === 'ok') {
+      showToast(`Bot ${action.toUpperCase()} successful`, 'success');
+      loadStats();
+    } else {
+      showToast('Action failed: ' + (r.message||''), 'error');
+    }
+  } catch(e) {
+    showToast('Connection error', 'error');
+  }
+}
+
+// ══════════════ VIP ══════════════
+let vipAction = 'add';
+function openAddVIP()    { vipAction='add';    document.getElementById('vip-modal-title').textContent='👑 ADD VIP';    document.getElementById('vip-uid').value=''; openModal('modal-vip'); }
+function openRemoveVIP() { vipAction='remove'; document.getElementById('vip-modal-title').textContent='❌ REMOVE VIP'; document.getElementById('vip-uid').value=''; openModal('modal-vip'); }
+
+async function confirmVIP() {
+  const uid = document.getElementById('vip-uid').value.trim();
+  if (!validateUID(uid)) { showToast('Invalid UID', 'error'); return; }
+  try {
+    const r = await apiFetch(`/api/v1/vip/${vipAction}`, {method:'POST', body:JSON.stringify({uid:parseInt(uid)})});
+    if (r.status === 'ok') {
+      showToast(`VIP ${vipAction} successful for UID: ${uid}`, 'success');
+      closeModal('modal-vip');
+    } else {
+      showToast(r.message || 'Failed', 'error');
+    }
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+// ══════════════ BLOCK ══════════════
+let blockAction = 'block';
+function openBlockUser()   { blockAction='block';   document.getElementById('block-modal-title').textContent='🚫 BLOCK USER';   document.getElementById('block-uid').value=''; openModal('modal-block'); }
+function openUnblockUser() { blockAction='unblock'; document.getElementById('block-modal-title').textContent='✅ UNBLOCK USER'; document.getElementById('block-uid').value=''; openModal('modal-block'); }
+
+async function confirmBlock() {
+  const uid = document.getElementById('block-uid').value.trim();
+  if (!validateUID(uid)) { showToast('Invalid UID', 'error'); return; }
+  try {
+    const r = await apiFetch(`/api/v1/user/${blockAction}`, {method:'POST', body:JSON.stringify({uid:parseInt(uid)})});
+    if (r.status === 'ok') {
+      showToast(`User ${blockAction}ed: ${uid}`, 'success');
+      closeModal('modal-block');
+      loadStats();
+    } else {
+      showToast(r.message || 'Failed', 'error');
+    }
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+// ══════════════ BROADCAST ══════════════
+function openBroadcast() { openModal('modal-broadcast'); }
+
+async function sendBroadcast() {
+  const text = document.getElementById('broadcast-text').value.trim();
+  if (!text) { showToast('Message cannot be empty', 'error'); return; }
+  try {
+    const r = await apiFetch('/api/v1/broadcast', {method:'POST', body:JSON.stringify({message:text})});
+    if (r.status === 'ok') {
+      showToast(`Broadcast sent to ${r.sent||'all'} users`, 'success');
+      closeModal('modal-broadcast');
+      document.getElementById('broadcast-text').value = '';
+    } else {
+      showToast(r.message || 'Failed', 'error');
+    }
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+// ══════════════ API KEYS ══════════════
+async function generateKey() {
+  const label = prompt('Enter a label for this API key (optional):') || '';
+  try {
+    const r = await apiFetch('/api/v1/api-keys/generate', {method:'POST', body:JSON.stringify({label})});
+    if (r.status === 'ok') {
+      showToast('API Key generated!', 'success');
+      alert(`New API Key:\n\n${r.key}\n\nSave this key securely!`);
+      loadAPIKeys();
+    } else {
+      showToast(r.message || 'Failed', 'error');
+    }
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+async function deleteKey(key) {
+  if (!confirm(`Delete API key?\n${key.slice(0,30)}...`)) return;
+  try {
+    const r = await apiFetch('/api/v1/api-keys/delete', {method:'POST', body:JSON.stringify({key})});
+    if (r.status === 'ok') {
+      showToast('API Key deleted', 'success');
+      loadAPIKeys();
+    }
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+// ══════════════ MODAL HELPERS ══════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ══════════════ TOAST ══════════════
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = `show ${type}`;
+  setTimeout(() => { t.className = type; }, 3000);
+}
+
+// ══════════════ KEYBOARD ══════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('login-screen').style.display !== 'none') doLogin();
+    if (document.getElementById('uid-input') === document.activeElement) lookupUser();
+  }
+  if (e.key === 'Escape') {
+    ['modal-broadcast','modal-vip','modal-block'].forEach(closeModal);
+  }
+});
+</script>
+</body>
+</html>
